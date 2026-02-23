@@ -239,14 +239,15 @@ async function cadastrarPonto() {
 
   const matriculas = pontMat.value
     .split(",")
-    .map(m => m.trim())
+    .map(m => m.trim().toUpperCase())
     .filter(m => m);
 
   if (!matriculas.length) {
     alert("Nenhuma matrícula válida informada");
     return;
   }
-   if (!pontData.value) {
+
+  if (!pontData.value) {
     alert("Informe a data do lançamento");
     return;
   }
@@ -266,22 +267,37 @@ async function cadastrarPonto() {
     return;
   }
 
-  // ===== VALIDA DATA (NÃO PODE SER FUTURA) =====
- const hoje = new Date().toISOString().split("T")[0]; 
- // formato: YYYY-MM-DD
+  // ===== VALIDA DATA =====
+  const hoje = new Date().toISOString().split("T")[0];
+  if (pontData.value > hoje) {
+    alert("A data do lançamento não pode ser posterior à data atual");
+    return;
+  }
 
- if (pontData.value > hoje) {
-  alert("A data do lançamento não pode ser posterior à data atual");
-  return;
- }
-   // Tipos que valem 5 pontos
-   const tiposCincoPontos = [
+  const tiposCincoPontos = [
     "APF - MANDADO DE PRISÃO",
     "VEÍCULO ENCONTRADO"
-   ];
+  ];
 
-   const pontos = tiposCincoPontos.includes(pontTipo.value) ? 5 : 10;
-  // 1️⃣ Buscar todos os policiais informados
+  let pontos = 0;
+  let quantidadeArmas = 1;
+
+  if (pontTipo.value === "ARMA") {
+
+    quantidadeArmas = parseInt(pontQtdArmas.value);
+
+    if (isNaN(quantidadeArmas) || quantidadeArmas <= 0) {
+      alert("Informe a quantidade de armas corretamente");
+      return;
+    }
+
+    pontos = quantidadeArmas * 10;
+
+  } else {
+    pontos = tiposCincoPontos.includes(pontTipo.value) ? 5 : 10;
+  }
+
+  // Buscar policiais
   const { data: usuarios } = await supabaseClient
     .from("usuarios")
     .select("matricula")
@@ -292,10 +308,10 @@ async function cadastrarPonto() {
     return;
   }
 
-  // 2️⃣ Monta os lançamentos (um por policial)
   let sucesso = 0;
+
   for (let mat of matriculas) {
-    const { data, error } = await supabaseClient.rpc("inserir_pontuacao", {
+    const { error } = await supabaseClient.rpc("inserir_pontuacao", {
       p_matricula: mat,
       p_tipo: pontTipo.value,
       p_pontos: pontos,
@@ -311,13 +327,14 @@ async function cadastrarPonto() {
 
   alert(`Pontuação lançada para ${sucesso} policial(is)`);
 
-
-  // 4️⃣ Limpa campos
+  // LIMPEZA
   pontMat.value = "";
   pontData.value = "";
   pontHora.value = "";
   pontProc.value = "";
   pontInfo.value = "";
+  pontQtdArmas.value = 1;
+  document.getElementById("campoQtdArmas").style.display = "none";
   $("nomePolicial").innerHTML = "";
 }
 
@@ -963,7 +980,17 @@ async function carregarDashboard() {
 
   $("listaAptos").innerHTML = html;
 }
+function verificarTipoPontuacao() {
+  const tipo = pontTipo.value;
+  const campo = document.getElementById("campoQtdArmas");
 
+  if (tipo === "ARMA") {
+    campo.style.display = "block";
+  } else {
+    campo.style.display = "none";
+    pontQtdArmas.value = 1;
+  }
+}
 async function buscarRanking() {
 
   const dataInicio = document.getElementById("rankInicio").value;
