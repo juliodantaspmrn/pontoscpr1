@@ -134,14 +134,17 @@
            onblur="buscarNome(this.value,'nomePolicial')">
     <div id="nomePolicial" class="info"></div>
 
-    <select id="pontTipo">
-      <option value="APF - MANDADO DE PRISÃO">Cumprimento de Mandado de Prisão – 5</option>
+      <select id="pontTipo" onchange="verificarTipoPontuacao()">
+        <option value="APF - MANDADO DE PRISÃO">Cumprimento de Mandado de Prisão – 5</option>
       <option value="DROGA - TRÁFICO">Apreensão de Droga - Tráfico – 10</option>
       <option value="ARMA">Apreensão de Arma – 10</option>
       <option value="VEÍCULO RECUPERADO">Recuperação de Veículo Roubado/Furtado com Diligência – 10</option>
       <option value="VEÍCULO ENCONTRADO">Veículo Roubado/Furtado Encontrado sem Diligência – 5</option>
     </select>
-
+     <div id="campoQtdArmas" style="display:none">
+  <label>Quantidade de Armas</label>
+  <input type="number" id="pontQtdArmas" min="1" value="1">
+   </div>
     <input id="pontData" type="date">
     <input id="pontHora" type="time">
     <input id="pontProc" placeholder="Nº do Procedimento">
